@@ -208,9 +208,9 @@ class BonusRelease extends React.PureComponent<Props, State> {
      *
      */
     Animated.parallel([
-      createTimingAnimation(this.bgRaySpin, 4550, Easing.linear),
-      createTimingAnimation(this.bgRayScale, 4550, Easing.linear),
-      createTimingAnimation(this.rayOpacity, 4550, Easing.linear),
+      // createTimingAnimation(this.bgRaySpin, 4550, Easing.linear),
+      // createTimingAnimation(this.bgRayScale, 4550, Easing.linear),
+      // createTimingAnimation(this.rayOpacity, 4550, Easing.linear),
       createTimingAnimation(this.walletOpacity, 4000, Easing.linear, 2000),
       createTimingAnimation(this.walletScale, 4000, Easing.linear, 2000),
       createTimingAnimation(this.moveTop, 4000, Easing.linear, 2000),

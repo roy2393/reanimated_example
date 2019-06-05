@@ -13,6 +13,7 @@ import {Platform, StyleSheet, Text, View, Button, TouchableOpacity} from 'react-
 import {Events} from './src/handlers/eventemitter';
 
 import Bonus from './src/components/Bonus/Bonus';
+import BonusRe from './src/components/Bonus/BonusRe';
 
 
 interface Props {}
@@ -24,6 +25,7 @@ export default class App extends Component<Props> {
   render() {
     return (
       <View style={styles.container}>
+        <BonusRe />
         <Bonus onStart={() => console.log('STARTED')} onComplete={()=> console.log('COMPLETED')}/>
         <Text style={styles.welcome}>Welcome to React Native!</Text>
         <Text style={styles.instructions}>To get started, edit App.tsx</Text>
