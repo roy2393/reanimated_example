@@ -1,161 +1,211 @@
-import React, { Component } from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import React, { Component } from "react";
+import { StyleSheet, View, Dimensions, Image, Text } from "react-native";
 
-// setInterval(() => {
-//   let iters = 1e8,
-//     sum = 0;
-//   while (iters-- > 0) sum += iters;
-// }, 300);
+import Animated, { Easing } from "react-native-reanimated";
 
+const HEIGHT = Dimensions.get("window").height;
+const WIDTH = Dimensions.get("window").width;
 const {
   set,
   cond,
   eq,
   add,
+  call,
   multiply,
   lessThan,
-  abs,
-  modulo,
-  round,
-  interpolate,
-  divide,
-  sub,
-  color,
+  startClock,
+  stopClock,
+  clockRunning,
+  block,
+  timing,
+  debug,
+  spring,
   Value,
-  event,
+  Clock,
+  event
 } = Animated;
 
-const PICKER_WIDTH = Dimensions.get('window').width;
-const PICKER_HEIGHT = Dimensions.get('window').height;
+function runSpring(clock, value, dest) {
+  const state = {
+    finished: new Value(0),
+    velocity: new Value(0),
+    position: new Value(0),
+    time: new Value(0)
+  };
 
-function match(condsAndResPairs, offset = 0) {
-  if (condsAndResPairs.length - offset === 1) {
-    return condsAndResPairs[offset];
-  } else if (condsAndResPairs.length - offset === 0) {
-    return undefined;
-  }
-  return cond(
-    condsAndResPairs[offset],
-    condsAndResPairs[offset + 1],
-    match(condsAndResPairs, offset + 2)
-  );
-}
+  const config = {
+    toValue: new Value(0),
+    damping: 7,
+    mass: 1,
+    stiffness: 121.6,
+    overshootClamping: false,
+    restSpeedThreshold: 0.001,
+    restDisplacementThreshold: 0.001
+  };
 
-function colorHSV(h /* 0 - 360 */, s /* 0 - 1 */, v /* 0 - 1 */) {
-  // Converts color from HSV format into RGB
-  // Formula explained here: https://www.rapidtables.com/convert/color/hsv-to-rgb.html
-  const c = multiply(v, s);
-  const hh = divide(h, 60);
-  const x = multiply(c, sub(1, abs(sub(modulo(hh, 2), 1))));
-
-  const m = sub(v, c);
-
-  const colorRGB = (r, g, b) =>
-    color(
-      round(multiply(255, add(r, m))),
-      round(multiply(255, add(g, m))),
-      round(multiply(255, add(b, m)))
-    );
-
-  return match([
-    lessThan(h, 60),
-    colorRGB(c, x, 0),
-    lessThan(h, 120),
-    colorRGB(x, c, 0),
-    lessThan(h, 180),
-    colorRGB(0, c, x),
-    lessThan(h, 240),
-    colorRGB(0, x, c),
-    lessThan(h, 300),
-    colorRGB(x, 0, c),
-    colorRGB(c, 0, x) /* else */,
+  return block([
+    cond(clockRunning(clock), 0, [
+      set(state.finished, 0),
+      set(state.time, 0),
+      set(state.position, value),
+      set(state.velocity, -2500),
+      set(config.toValue, dest),
+      startClock(clock)
+    ]),
+    spring(clock, state, config),
+    cond(state.finished, debug("stop clock", stopClock(clock))),
+    state.position
   ]);
 }
 
-export default class Example extends Component {
-  static navigationOptions = {
-    title: 'Colors Example',
+function runTiming(clock, value, dest, duration) {
+  const state = {
+    finished: new Value(0),
+    position: new Value(0),
+    time: new Value(0),
+    frameTime: new Value(0)
   };
+
+  const config = {
+    duration: duration || 4000,
+    toValue: new Value(0),
+    easing: Easing.inOut(Easing.ease)
+  };
+
+  return block([
+    cond(clockRunning(clock), 0, [
+      set(state.finished, 0),
+      set(state.time, 0),
+      set(state.position, value),
+      set(state.frameTime, 0),
+      set(config.toValue, dest),
+      startClock(clock)
+    ]),
+    timing(clock, state, config),
+    cond(state.finished, debug("stop clock", stopClock(clock))),
+    state.position
+  ]);
+}
+
+export default class BonusRe extends Component {
   constructor(props) {
     super(props);
 
-    const dragX = new Value(0);
-    const dragY = new Value(0);
-    const state = new Value(-1);
-
-    this._onGestureEvent = event([
-      {
-        nativeEvent: { translationX: dragX, translationY: dragY, state: state },
-      },
-    ]);
-
-    const offsetX = new Value(PICKER_WIDTH / 2);
-    this._transX = cond(
-      eq(state, State.ACTIVE),
-      add(offsetX, dragX),
-      set(offsetX, add(offsetX, dragX))
-    );
-
-    const offsetY = new Value(200);
-    this._transY = cond(
-      eq(state, State.ACTIVE),
-      add(offsetY, dragY),
-      set(offsetY, add(offsetY, dragY))
-    );
-
-    const h = interpolate(this._transX, {
-      inputRange: [0, PICKER_WIDTH],
-      outputRange: [0, 360],
-      extrapolate: 'clamp',
-    });
-    const s = interpolate(this._transY, {
-      inputRange: [0, PICKER_HEIGHT],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    });
-    const v = 1;
-    this._color = colorHSV(h, s, v);
+    // const transX = new Value(0);
+    const clock1 = new Clock();
+    const clock2 = new Clock();
+    const clock3 = new Clock();
+    const clock4 = new Clock();
+    const clock5 = new Clock();
+    const clock6 = new Clock();
+    // const twenty = new Value(20);
+    // const thirty = new Value(30);
+    // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
+    this._transX = runTiming(clock1, 0, -120, 3000);
+    this._scale = runTiming(clock2, 0, 2, 3000);
+    this._rotate = runTiming(clock3, 0, 3.14, 3000);
+    this._rayOpacity = runTiming(clock4, 0, 1, 3000);
+    this._walletOpacity = runTiming(clock5, 0, 1, 3000);
+    this._walletScale = runTiming(clock5, 4, 0.5, 3000);
+  }
+  componentDidMount() {
+    // Animated.spring(this._transX, {
+    //   duration: 300,
+    //   velocity: -300,
+    //   toValue: 150,
+    // }).start();
   }
   render() {
+    const walletXPos = WIDTH / 2 - 50;
+    const walletYPos = (HEIGHT - 100) / 2 - 50;
     return (
       <View style={styles.container}>
-        <PanGestureHandler
-          maxPointers={1}
-          onGestureEvent={this._onGestureEvent}
-          onHandlerStateChange={this._onGestureEvent}>
-          <Animated.View
-            style={[
-              styles.box,
-              {
-                backgroundColor: this._color,
-                transform: [
-                  { translateX: this._transX, translateY: this._transY },
-                ],
-              },
-            ]}
-          />
-        </PanGestureHandler>
+        <Animated.Image
+          source={require("./rays.png")}
+          style={[
+            {
+              position: "absolute",
+              width: 220,
+              height: 220,
+              top: walletYPos - 65,
+              right: walletXPos - 65,
+              opacity: this._rayOpacity,
+              justifyContent: "center",
+              alignItems: "center"
+            },
+            { transform: [{ rotate: this._rotate }, { scale: this._scale }] }
+          ]}
+        />
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              width: 100,
+              height: 100,
+              flex: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              opacity: this._walletOpacity,
+              transform: [{ scale: this._walletScale }],
+            },
+            {
+              transform: [
+                { translateX: this._transX, translateY: this._transX }
+              ]
+            }
+          ]}
+        >
+          <Image source={require("./wallet.png")} style={styles.box} />
+          <View
+            style={{
+              position: "absolute",
+              top: 50,
+              width: 70,
+              justifyContent: "center",
+              alignItems: "center"
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontWeight: "bold",
+                fontSize: 15
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              <Text style={{ fontWeight: "normal" }}>₹</Text>
+              {`100`}
+            </Text>
+            <Text
+              style={{
+                color: "#fff",
+                fontWeight: "bold",
+                fontSize: 13
+              }}
+            >
+              {`BONUS`}
+            </Text>
+          </View>
+        </Animated.View>
       </View>
     );
   }
 }
 
-const CIRCLE_SIZE = 70;
+const BOX_SIZE = 100;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5FCFF',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5FCFF"
   },
   box: {
-    width: CIRCLE_SIZE,
-    height: CIRCLE_SIZE,
-    marginLeft: -CIRCLE_SIZE / 2,
-    marginTop: -CIRCLE_SIZE / 2,
-    borderRadius: CIRCLE_SIZE / 2,
-    borderColor: 'black',
-    borderWidth: 1,
-  },
+    width: BOX_SIZE,
+    height: BOX_SIZE,
+    alignSelf: "center",
+    margin: BOX_SIZE / 2
+  }
 });

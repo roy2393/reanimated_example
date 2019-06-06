@@ -24,8 +24,13 @@ export default class App extends Component<Props> {
 
   render() {
     return (
+    <React.Fragment>
+      {/* <Bonus onStart={() => console.log('STARTED')} onComplete={()=> console.log('COMPLETED')}/> */}
+      <BonusRe />
+    </React.Fragment>
+    );
+    return (
       <View style={styles.container}>
-        <BonusRe />
         <Bonus onStart={() => console.log('STARTED')} onComplete={()=> console.log('COMPLETED')}/>
         <Text style={styles.welcome}>Welcome to React Native!</Text>
         <Text style={styles.instructions}>To get started, edit App.tsx</Text>
