@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import { View, Text, Dimensions, Animated, Easing, Image } from 'react-native';
+import React, { Component } from "react";
+import { View, Text, Dimensions, Animated, Easing, Image } from "react-native";
 
-import { Events } from '../../handlers/eventemitter';
+import { Events } from "../../handlers/eventemitter";
 
-const HEIGHT = Dimensions.get('window').height;
-const WIDTH = Dimensions.get('window').width;
+const HEIGHT = Dimensions.get("window").height;
+const WIDTH = Dimensions.get("window").width;
 
 interface Props {
   onComplete: () => void;
@@ -101,7 +101,7 @@ class BonusRelease extends React.PureComponent<Props, State> {
     super(props);
 
     this.state = {
-      bonusReleased: 0,
+      bonusReleased: 0
     };
 
     this.bgRaySpin = new Animated.Value(0);
@@ -116,10 +116,7 @@ class BonusRelease extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
-    Events.addListener(
-      'bonus',
-      this.handleBonusRelease.bind(this)
-    );
+    Events.addListener("bonus", this.handleBonusRelease.bind(this));
   }
 
   /**
@@ -129,16 +126,16 @@ class BonusRelease extends React.PureComponent<Props, State> {
    * @memberof BonusRelease
    */
   handleBonusRelease(wsMsg: any) {
-    console.log('handleBonusRelease::', wsMsg);
-    if (wsMsg && wsMsg.type === 'bonus') {
-        if (this.eventQueue.length === 0) {
-          console.log('queue empty, event started');
-          this.animate(wsMsg);
-        }
-
-        this.eventQueue.push(wsMsg);
-        console.log('wsMsg pushed', wsMsg);
+    console.log("handleBonusRelease::", wsMsg);
+    if (wsMsg && wsMsg.type === "bonus") {
+      if (this.eventQueue.length === 0) {
+        console.log("queue empty, event started");
+        this.animate(wsMsg);
       }
+
+      this.eventQueue.push(wsMsg);
+      console.log("wsMsg pushed", wsMsg);
+    }
   }
 
   /**
@@ -149,7 +146,7 @@ class BonusRelease extends React.PureComponent<Props, State> {
    */
   updateBonusText(bonusReleased: number) {
     this.setState({
-      bonusReleased: bonusReleased,
+      bonusReleased: bonusReleased
     });
     this.forceUpdate();
   }
@@ -160,7 +157,7 @@ class BonusRelease extends React.PureComponent<Props, State> {
    * @memberof BonusRelease
    */
   animate(data: any) {
-    console.log('animation started', data);
+    console.log("animation started", data);
     this.updateBonusText(data.bonusReleased);
     this.bgRaySpin.setValue(0);
     this.bgRayScale.setValue(0);
@@ -188,7 +185,7 @@ class BonusRelease extends React.PureComponent<Props, State> {
         toValue: 1,
         duration,
         easing,
-        delay,
+        delay
       });
     };
 
@@ -208,13 +205,13 @@ class BonusRelease extends React.PureComponent<Props, State> {
      *
      */
     Animated.parallel([
-      // createTimingAnimation(this.bgRaySpin, 4550, Easing.linear),
-      // createTimingAnimation(this.bgRayScale, 4550, Easing.linear),
-      // createTimingAnimation(this.rayOpacity, 4550, Easing.linear),
+      createTimingAnimation(this.bgRaySpin, 4550, Easing.linear),
+      createTimingAnimation(this.bgRayScale, 4550, Easing.linear),
+      createTimingAnimation(this.rayOpacity, 4550, Easing.linear),
       createTimingAnimation(this.walletOpacity, 4000, Easing.linear, 2000),
       createTimingAnimation(this.walletScale, 4000, Easing.linear, 2000),
       createTimingAnimation(this.moveTop, 4000, Easing.linear, 2000),
-      createTimingAnimation(this.moveRight, 4000, Easing.linear, 2000),
+      createTimingAnimation(this.moveRight, 4000, Easing.linear, 2000)
     ]).start(this.onAnimationComplete);
   }
 
@@ -225,10 +222,10 @@ class BonusRelease extends React.PureComponent<Props, State> {
    */
   onAnimationComplete() {
     this.eventQueue.shift();
-    console.log('animation complete', this.eventQueue);
+    console.log("animation complete", this.eventQueue);
 
     if (this.eventQueue.length > 0) {
-      console.log('next event started', this.eventQueue);
+      console.log("next event started", this.eventQueue);
       this.animate(this.eventQueue[0]);
     }
     this.props.onComplete();
@@ -241,155 +238,150 @@ class BonusRelease extends React.PureComponent<Props, State> {
    * @memberof BonusRelease
    */
   render() {
-    console.log('Render Bonus', this.state.bonusReleased);
-    const RAY_INPUT_RANGE = [0, 0.1, 0.9, 1];
+
     const walletXPos = WIDTH / 2 - 50;
     const walletYPos = (HEIGHT - 100) / 2 - 50;
 
     /**
      * bg Ray spin timings:
-     *  anticlockwise spin from 0 - 0.1 i.e 1 sec
-     *  wait from 0.1 - 0.9 i.e 3 sec
-     *  clockwise spin from 0.9 - 1, i.e 1sec
+     *  anticlockwise spin from 0 - 0.2 i.e 1 sec
+     *  wait from 0.2 - 0.8 i.e 3 sec
+     *  clockwise spin from 0.8 - 1, i.e 1sec
      */
     const spin = this.bgRaySpin.interpolate({
-      inputRange: RAY_INPUT_RANGE,
-      outputRange: ['270deg', '360deg', '360deg', '270deg'],
+      inputRange: [0, 0.2, 0.8, 1],
+      outputRange: ["270deg", "360deg", "360deg", "270deg"]
     });
 
     /**
      * bg Ray scale timings:
-     *  scale up from 0 - 0.1 i.e approx 0.5 sec
-     *  wait from 0.1 - 0.9 i.e 3 sec
-     *  scale down from 0.9 - 1, i.e approx 0.5 sec
+     *  scale up from 0 - 0.2 i.e 1 sec
+     *  wait from 0.2 - 0.8 i.e 3 sec
+     *  scale down from 0.8 - 1, i.e 1sec
      */
     const rayScale = this.bgRayScale.interpolate({
-      inputRange: RAY_INPUT_RANGE,
-      outputRange: [0, 1, 1, 0],
+      inputRange: [0, 0.2, 0.8, 1],
+      outputRange: [0, 1, 1, 0]
     });
 
     /**
      * bg Ray opacity timings:
-     *  fade in from 0 - 0.1 i.e approx 0.5 sec
-     *  wait from 0.1 - 0.9 i.e 3 sec
-     *  fade out down from 0.9 - 1, i.e approx 0.5 sec
+     *  fade in from 0 - 0.2 i.e 1 sec
+     *  wait from 0.2 - 0.8 i.e 3 sec
+     *  fade out down from 0.8 - 1, i.e 1sec
      */
     const rayOpacity = this.rayOpacity.interpolate({
-      inputRange: RAY_INPUT_RANGE,
-      outputRange: [0, 1, 1, 0],
+      inputRange: [0, 0.2, 0.8, 1],
+      outputRange: [0, 1, 1, 0]
     });
 
     /**
      * wallet top movement timings:
-     *  wait at original poition from 0 - 0.80 i.e 3 sec
-     *  move to -30 from 0.80 - 1, i.e approx 0.5 sec
+     *  wait at original poition from 0 - 0.75 i.e 3 sec
+     *  move to -30 from 0.75 - 1, i.e 1sec
      */
     const moveTop = this.moveTop.interpolate({
-      inputRange: [0, 0.8, 0.95, 1],
-      outputRange: [walletYPos, walletYPos, -35, -35],
+      inputRange: [0, 0.75, 1],
+      outputRange: [walletYPos, walletYPos, -30]
     });
 
     /**
      * wallet right movement timings:
-     *  wait at original poition from 0 - 0.80 i.e 3 sec
-     *  move to 10 from 0.80 - 1, i.e approx 0.5 sec
+     *  wait at original poition from 0 - 0.75 i.e 3 sec
+     *  move to 10 from 0.75 - 1, i.e 1sec
      */
     const moveRight = this.moveRight.interpolate({
-      inputRange: [0, 0.8, 0.95, 1],
-      outputRange: [walletXPos, walletXPos, -10, -10],
+      inputRange: [0, 0.75, 1],
+      outputRange: [walletXPos, walletXPos, 10]
     });
 
     /**
      * wallet opacity timings:
      *  fade in from 0 - 0.05, i.e 200 milliseconds
-     *  wait from 0.05 - 0.80, i.e approx 3 seconds
-     *  fade out while moving up from 0.80 - 1, i.e 1 second
+     *  wait from 0.05 - 0.75, i.e approx 3 seconds
+     *  fade out while moving up from 0.75 - 1, i.e 1 second
      */
     const walletOpacity = this.walletOpacity.interpolate({
-      inputRange: [0, 0.05, 0.1, 0.95, 1],
-      outputRange: [0, 0.5, 1, 1, 0],
+      inputRange: [0, 0.05, 0.75, 1],
+      outputRange: [0, 1, 1, 0]
     });
 
     /**
      * wallet scale timings:
-     *  scale down from 0 - 0.05 i.e 200 milliseconds
-     *  scale up from 0.05 - 0.1, i.e 200 milliseconds
-     *  wait from 0.05 - 0.80, i.e approx 3 seconds
-     *  scale down while moving up from 0.80 - 1, i.e 1 second
+     *  scale up from 0 - 0.05, i.e 200 milliseconds
+     *  wait from 0.05 - 0.75, i.e approx 3 seconds
+     *  scale down while moving up from 0.75 - 1, i.e 1 second
      */
     const walletScale = this.walletScale.interpolate({
-      inputRange: [0, 0.05, 0.1, 0.8, 0.95, 1],
-      outputRange: [5, 0.5, 1, 1, 0.2, 0.2],
+      inputRange: [0, 0.05, 0.1, 0.75, 1],
+      outputRange: [5, 0.7, 1, 1, 0.5]
     });
 
     return (
       <React.Fragment>
         <Animated.Image
           style={{
-            position: 'absolute',
+            position: "absolute",
             width: 220,
             height: 220,
             top: walletYPos - 65,
             right: walletXPos - 65,
             opacity: rayOpacity,
-            justifyContent: 'center',
-            alignItems: 'center',
-            transform: [{ rotate: spin }, { scale: rayScale }],
+            justifyContent: "center",
+            alignItems: "center",
+            transform: [{ rotate: spin }, { scale: rayScale }]
           }}
-          source={require('./rays.png')}
+          source={require("./rays.png")}
         />
         <Animated.View
           style={{
-            position: 'absolute',
+            position: "absolute",
             top: moveTop,
             right: moveRight,
             width: 100,
             height: 100,
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
+            justifyContent: "center",
+            alignItems: "center",
             opacity: walletOpacity,
-            transform: [{ scale: walletScale }],
-            elevation: 9,
-          }}>
+            transform: [{ scale: walletScale }]
+          }}
+        >
           <Image
             style={{
-              justifyContent: 'center',
-              alignItems: 'center',
+              justifyContent: "center",
+              alignItems: "center"
             }}
-            source={require('./wallet.png')}
+            source={require("./wallet.png")}
           />
-          <View
+          <Text
             style={{
-              position: 'absolute',
+              position: "absolute",
+              color: "#fff",
+              fontWeight: "bold",
+              fontSize: 15,
               top: 50,
-              width: 70,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <Text
-              style={{
-                color: '#fff',
-                fontWeight: 'bold',
-                fontSize: 15,
-              }}
-              numberOfLines={1}
-              ellipsizeMode="tail">
-              <Text style={{ fontWeight: 'normal' }}>₹</Text>
-              {`${this.state.bonusReleased}`}
-            </Text>
-            <Text
-              style={{
-                color: '#fff',
-                fontWeight: 'bold',
-                fontSize: 13,
-              }}>
-              {`BONUS`}
-            </Text>
-          </View>
+              width: 70
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {`₹ ${this.state.bonusReleased}`}
+          </Text>
+          <Text
+            style={{
+              position: "absolute",
+              color: "#fff",
+              fontWeight: "bold",
+              fontSize: 13,
+              top: 68
+            }}
+          >
+            {`BONUS`}
+          </Text>
         </Animated.View>
       </React.Fragment>
     );
+
   }
 }
 

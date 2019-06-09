@@ -9,80 +9,59 @@ const {
   set,
   cond,
   eq,
-  add,
-  call,
-  multiply,
-  lessThan,
+  and,
+  interpolate,
   startClock,
-  stopClock,
   clockRunning,
   block,
   timing,
-  debug,
-  spring,
   Value,
   Clock,
-  event
 } = Animated;
 
-function runSpring(clock, value, dest) {
+
+function runTiming(clock, value, dest, duration, easing) {
+  console.log("runTiming");
   const state = {
     finished: new Value(0),
-    velocity: new Value(0),
-    position: new Value(0),
-    time: new Value(0)
-  };
-
-  const config = {
-    toValue: new Value(0),
-    damping: 7,
-    mass: 1,
-    stiffness: 121.6,
-    overshootClamping: false,
-    restSpeedThreshold: 0.001,
-    restDisplacementThreshold: 0.001
-  };
-
-  return block([
-    cond(clockRunning(clock), 0, [
-      set(state.finished, 0),
-      set(state.time, 0),
-      set(state.position, value),
-      set(state.velocity, -2500),
-      set(config.toValue, dest),
-      startClock(clock)
-    ]),
-    spring(clock, state, config),
-    cond(state.finished, debug("stop clock", stopClock(clock))),
-    state.position
-  ]);
-}
-
-function runTiming(clock, value, dest, duration) {
-  const state = {
-    finished: new Value(0),
-    position: new Value(0),
+    position: new Value(value),
     time: new Value(0),
     frameTime: new Value(0)
   };
 
   const config = {
     duration: duration || 4000,
-    toValue: new Value(0),
+    toValue: new Value(dest || 0),
     easing: Easing.inOut(Easing.ease)
   };
 
-  return block([
-    cond(clockRunning(clock), 0, [
+    const reset = [
       set(state.finished, 0),
       set(state.time, 0),
-      set(state.position, value),
-      set(state.frameTime, 0),
+      set(state.frameTime, 0)
+    ];
+
+    console.log(
+      and(state.finished, eq(state.position, value)),
+      eq(state.position, value),
       set(config.toValue, dest),
-      startClock(clock)
+      cond(and(state.finished, eq(state.position, value)), [
+        ...reset,
+        set(config.toValue, dest)
+      ])
+    );
+
+  return block([
+    cond(and(state.finished, eq(state.position, dest)), [
+      ...reset,
+      set(config.toValue, value)
     ]),
+    cond(and(state.finished, eq(state.position, value)), [
+      ...reset,
+      set(config.toValue, dest)
+    ]),
+    cond(clockRunning(clock), 0, startClock(clock)),
     timing(clock, state, config),
-    cond(state.finished, debug("stop clock", stopClock(clock))),
     state.position
   ]);
 }
@@ -94,30 +73,47 @@ export default class BonusRe extends Component {
     // const transX = new Value(0);
     const clock1 = new Clock();
     const clock2 = new Clock();
-    const clock3 = new Clock();
-    const clock4 = new Clock();
-    const clock5 = new Clock();
-    const clock6 = new Clock();
-    // const twenty = new Value(20);
-    // const thirty = new Value(30);
-    // this._transX = cond(new Value(0), twenty, multiply(3, thirty));
-    this._transX = runTiming(clock1, 0, -120, 3000);
-    this._scale = runTiming(clock2, 0, 2, 3000);
-    this._rotate = runTiming(clock3, 0, 3.14, 3000);
-    this._rayOpacity = runTiming(clock4, 0, 1, 3000);
-    this._walletOpacity = runTiming(clock5, 0, 1, 3000);
-    this._walletScale = runTiming(clock5, 4, 0.5, 3000);
+
+    const rayanimation = runTiming(clock2, 0, 1, 5000);
+    const walletAnimation = runTiming(clock1, 0, 1, 5000);
+
+    this._scale = interpolate(rayanimation, {
+      inputRange: [0, 0.2, 0.8, 1],
+      outputRange: [0, 1, 1, 0]
+    });
+
+    this._rotate = interpolate(rayanimation, {
+      inputRange: [0, 0.2, 0.8, 1],
+      outputRange: [0, 3.14, 3.14, 0]
+    });
+
+    this._rayOpacity = interpolate(rayanimation, {
+      inputRange: [0, 0.2, 0.8, 1],
+      outputRange: [0, 1, 1, 0]
+    });
+
+    this._walletScale = interpolate(walletAnimation, {
+      inputRange: [0.2, 0.25, 0.3, 0.8, 1],
+      outputRange: [5, 0.5, 1, 1, 0.3]
+    });
+
+     this._walletOpacity = interpolate(walletAnimation, {
+       inputRange: [0.2, 0.25, 0.3, 1],
+       outputRange: [0, 0.7, 1, 1]
+     });
+
+     this._transX = interpolate(walletAnimation, {
+       inputRange: [0, 0.8, 1],
+       outputRange: [0, 0, WIDTH/2]
+     });
+
+     this._transY = interpolate(walletAnimation, {
+       inputRange: [0, 0.8, 1],
+       outputRange: [0, 0, -HEIGHT/2]
+     });
   }
-  componentDidMount() {
-    // Animated.spring(this._transX, {
-    //   duration: 300,
-    //   velocity: -300,
-    //   toValue: 150,
-    // }).start();
-  }
+
   render() {
-    const walletXPos = WIDTH / 2 - 50;
-    const walletYPos = (HEIGHT - 100) / 2 - 50;
     return (
       <View style={styles.container}>
         <Animated.Image
@@ -127,13 +123,13 @@ export default class BonusRe extends Component {
               position: "absolute",
               width: 220,
               height: 220,
-              top: walletYPos - 65,
-              right: walletXPos - 65,
               opacity: this._rayOpacity,
               justifyContent: "center",
               alignItems: "center"
             },
-            { transform: [{ rotate: this._rotate }, { scale: this._scale }] }
+            {
+              transform: [{ rotate: this._rotate }, { scale: this._scale }]
+            }
           ]}
         />
         <Animated.View
@@ -145,12 +141,15 @@ export default class BonusRe extends Component {
               flex: 1,
               justifyContent: "center",
               alignItems: "center",
-              opacity: this._walletOpacity,
-              transform: [{ scale: this._walletScale }],
+              opacity: this._walletOpacity
             },
             {
               transform: [
-                { translateX: this._transX, translateY: this._transX }
+                {
+                  translateX: this._transX,
+                  translateY: this._transY,
+                  scale: this._walletScale
+                }
               ]
             }
           ]}
