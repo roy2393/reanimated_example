@@ -18,11 +18,12 @@ const {
   block,
   timing,
   Value,
-  Clock
+  Clock,
+  call
 } = Animated;
 
 function runTiming(clock, value, dest, duration, callback) {
-  const onComplete = callback || function() {console.log('completed')};
+  const onComplete = callback || function(data) {console.log('completed',data)};
   const state = {
     finished: new Value(0),
     position: new Value(value),
@@ -42,11 +43,15 @@ function runTiming(clock, value, dest, duration, callback) {
     set(state.frameTime, 0)
   ];
 
+
+
   return block([
     cond(and(state.finished, eq(state.position, value)), [
       ...reset,
-      set(config.toValue, dest),
-      onComplete()
+      set(config.toValue, dest)
+    ]),
+    cond(and(state.finished, eq(state.position, dest)), [
+      call([state.position], onComplete)
     ]),
     cond(clockRunning(clock), 0, startClock(clock)),
     timing(clock, state, config),
@@ -85,10 +90,10 @@ export default class BonusRe extends Component {
   handleBonusRelease(wsMsg: any) {
     console.log("handleBonusRelease::", wsMsg);
     if (wsMsg && wsMsg.type === "bonus") {
-      // if (this.eventQueue.length === 0) {
+      if (this.eventQueue.length === 0) {
         console.log("queue empty, event started");
         this.animate(wsMsg);
-      // }
+      }
 
       this.eventQueue.push(wsMsg);
       console.log("wsMsg pushed", wsMsg);
@@ -127,7 +132,14 @@ export default class BonusRe extends Component {
     const clock2 = new Clock();
 
     this.rayanimation = runTiming(clock2, 0, 1, 5000);
-    this.walletAnimation = runTiming(clock1, 0, 1, 5000);
+    this.walletAnimation = runTiming(
+      clock1,
+      0,
+      1,
+      5000,
+      this.onAnimationComplete
+    );
+    console.log('ANIMATE::', this.rayanimation, this.walletanimation);
     this.updateBonusText(data.bonusReleased);
   }
 
