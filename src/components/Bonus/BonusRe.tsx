@@ -1,6 +1,8 @@
 import React, { Component } from "react";
 import { StyleSheet, View, Dimensions, Image, Text } from "react-native";
 
+import { Events } from "../../handlers/eventemitter";
+
 import Animated, { Easing } from "react-native-reanimated";
 
 const HEIGHT = Dimensions.get("window").height;
@@ -16,12 +18,11 @@ const {
   block,
   timing,
   Value,
-  Clock,
+  Clock
 } = Animated;
 
-
-function runTiming(clock, value, dest, duration, easing) {
-  console.log("runTiming");
+function runTiming(clock, value, dest, duration, callback) {
+  const onComplete = callback || function() {console.log('completed')};
   const state = {
     finished: new Value(0),
     position: new Value(value),
@@ -35,30 +36,17 @@ function runTiming(clock, value, dest, duration, easing) {
     easing: Easing.inOut(Easing.ease)
   };
 
-    const reset = [
-      set(state.finished, 0),
-      set(state.time, 0),
-      set(state.frameTime, 0)
-    ];
-
-    console.log(
-      and(state.finished, eq(state.position, value)),
-      eq(state.position, value),
-      set(config.toValue, dest),
-      cond(and(state.finished, eq(state.position, value)), [
-        ...reset,
-        set(config.toValue, dest)
-      ])
-    );
+  const reset = [
+    set(state.finished, 0),
+    set(state.time, 0),
+    set(state.frameTime, 0)
+  ];
 
   return block([
-    cond(and(state.finished, eq(state.position, dest)), [
-      ...reset,
-      set(config.toValue, value)
-    ]),
     cond(and(state.finished, eq(state.position, value)), [
       ...reset,
-      set(config.toValue, dest)
+      set(config.toValue, dest),
+      onComplete()
     ]),
     cond(clockRunning(clock), 0, startClock(clock)),
     timing(clock, state, config),
@@ -67,55 +55,120 @@ function runTiming(clock, value, dest, duration, easing) {
 }
 
 export default class BonusRe extends Component {
+  /**
+   * Queue that maintains message buffer
+   *
+   * @private
+   * @type {*}
+   * @memberof BonusRelease
+   */
+  private eventQueue: [] = [];
+
   constructor(props) {
     super(props);
 
+    this.state = {
+      bonusReleased: null
+    };
+  }
+
+  componentDidMount() {
+    Events.addListener("bonus", this.handleBonusRelease.bind(this));
+  }
+
+  /**
+   *
+   *
+   * @param {*} wsMsg
+   * @memberof BonusRelease
+   */
+  handleBonusRelease(wsMsg: any) {
+    console.log("handleBonusRelease::", wsMsg);
+    if (wsMsg && wsMsg.type === "bonus") {
+      // if (this.eventQueue.length === 0) {
+        console.log("queue empty, event started");
+        this.animate(wsMsg);
+      // }
+
+      this.eventQueue.push(wsMsg);
+      console.log("wsMsg pushed", wsMsg);
+    }
+  }
+
+  /**
+   * Update State and render animated component
+   *
+   * @param {number} bonusReleased
+   * @memberof BonusRelease
+   */
+  updateBonusText(bonusReleased: number) {
+    this.setState({
+      bonusReleased: bonusReleased
+    });
+  }
+  /**
+   * Callback triggered once Bonus animation completes
+   *
+   * @memberof BonusRelease
+   */
+  onAnimationComplete = () => {
+    this.eventQueue.shift();
+    console.log("animation complete", this.eventQueue);
+
+    if (this.eventQueue.length > 0) {
+      console.log("next event started", this.eventQueue);
+      this.animate(this.eventQueue[0]);
+    }
+  }
+
+  animate(data) {
     // const transX = new Value(0);
     const clock1 = new Clock();
     const clock2 = new Clock();
 
-    const rayanimation = runTiming(clock2, 0, 1, 5000);
-    const walletAnimation = runTiming(clock1, 0, 1, 5000);
+    this.rayanimation = runTiming(clock2, 0, 1, 5000);
+    this.walletAnimation = runTiming(clock1, 0, 1, 5000);
+    this.updateBonusText(data.bonusReleased);
+  }
 
-    this._scale = interpolate(rayanimation, {
+  render() {
+    console.log("RE RENDER");
+    this._scale = interpolate(this.rayanimation, {
       inputRange: [0, 0.2, 0.8, 1],
       outputRange: [0, 1, 1, 0]
     });
 
-    this._rotate = interpolate(rayanimation, {
+    this._rotate = interpolate(this.rayanimation, {
       inputRange: [0, 0.2, 0.8, 1],
       outputRange: [0, 3.14, 3.14, 0]
     });
 
-    this._rayOpacity = interpolate(rayanimation, {
+    this._rayOpacity = interpolate(this.rayanimation, {
       inputRange: [0, 0.2, 0.8, 1],
       outputRange: [0, 1, 1, 0]
     });
 
-    this._walletScale = interpolate(walletAnimation, {
+    this._walletScale = interpolate(this.walletAnimation, {
       inputRange: [0.2, 0.25, 0.3, 0.8, 1],
       outputRange: [5, 0.5, 1, 1, 0.3]
     });
 
-     this._walletOpacity = interpolate(walletAnimation, {
-       inputRange: [0.2, 0.25, 0.3, 1],
-       outputRange: [0, 0.7, 1, 1]
-     });
+    this._walletOpacity = interpolate(this.walletAnimation, {
+      inputRange: [0.2, 0.25, 0.3, 1],
+      outputRange: [0, 0.7, 1, 1]
+    });
 
-     this._transX = interpolate(walletAnimation, {
-       inputRange: [0, 0.8, 1],
-       outputRange: [0, 0, WIDTH/2]
-     });
+    this._transX = interpolate(this.walletAnimation, {
+      inputRange: [0, 0.8, 1],
+      outputRange: [0, 0, WIDTH / 2]
+    });
 
-     this._transY = interpolate(walletAnimation, {
-       inputRange: [0, 0.8, 1],
-       outputRange: [0, 0, -HEIGHT/2]
-     });
-  }
-
-  render() {
-    return (
-      <View style={styles.container}>
+    this._transY = interpolate(this.walletAnimation, {
+      inputRange: [0, 0.8, 1],
+      outputRange: [0, 0, -HEIGHT / 2]
+    });
+    return this.state.bonusReleased ? (
+      <React.Fragment>
         <Animated.Image
           source={require("./rays.png")}
           style={[
@@ -173,8 +226,7 @@ export default class BonusRe extends Component {
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              <Text style={{ fontWeight: "normal" }}>₹</Text>
-              {`100`}
+              {`₹ ${this.state.bonusReleased}`}
             </Text>
             <Text
               style={{
@@ -187,8 +239,8 @@ export default class BonusRe extends Component {
             </Text>
           </View>
         </Animated.View>
-      </View>
-    );
+      </React.Fragment>
+    ) : null;
   }
 }
 

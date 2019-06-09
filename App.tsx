@@ -29,7 +29,7 @@ export default class App extends Component<Props> {
   startBonusAnimation() {
     setInterval(() => {
       Events.emit('bonus', { "type": "bonus", "userId":1028386, "bonusReleased": 100})
-    }, 5000)
+    }, 8000)
   }
 
   renderAnimatedBonus() {
