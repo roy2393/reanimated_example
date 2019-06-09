@@ -19,11 +19,13 @@ const {
   timing,
   Value,
   Clock,
-  call
+  call,
+  debug,
+  stopClock,
 } = Animated;
 
 function runTiming(clock, value, dest, duration, callback) {
-  const onComplete = callback || function(data) {console.log('completed',data)};
+  const onComplete = callback || function() {};
   const state = {
     finished: new Value(0),
     position: new Value(value),
@@ -50,11 +52,12 @@ function runTiming(clock, value, dest, duration, callback) {
       ...reset,
       set(config.toValue, dest)
     ]),
-    cond(and(state.finished, eq(state.position, dest)), [
-      call([state.position], onComplete)
-    ]),
     cond(clockRunning(clock), 0, startClock(clock)),
     timing(clock, state, config),
+    cond(state.finished, [
+      debug("stop clock", stopClock(clock)),
+      call([state.finished], onComplete)
+    ]),
     state.position
   ]);
 }
