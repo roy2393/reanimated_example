@@ -208,10 +208,10 @@ class BonusRelease extends React.PureComponent<Props, State> {
       createTimingAnimation(this.bgRaySpin, 4550, Easing.linear),
       createTimingAnimation(this.bgRayScale, 4550, Easing.linear),
       createTimingAnimation(this.rayOpacity, 4550, Easing.linear),
-      createTimingAnimation(this.walletOpacity, 4000, Easing.linear, 2000),
-      createTimingAnimation(this.walletScale, 4000, Easing.linear, 2000),
-      createTimingAnimation(this.moveTop, 4000, Easing.linear, 2000),
-      createTimingAnimation(this.moveRight, 4000, Easing.linear, 2000)
+      createTimingAnimation(this.walletOpacity, 4000, Easing.linear, 1500),
+      createTimingAnimation(this.walletScale, 4000, Easing.linear, 1500),
+      createTimingAnimation(this.moveTop, 4000, Easing.linear, 1500),
+      createTimingAnimation(this.moveRight, 4000, Easing.linear, 1500)
     ]).start(this.onAnimationComplete);
   }
 
@@ -281,8 +281,8 @@ class BonusRelease extends React.PureComponent<Props, State> {
      *  move to -30 from 0.75 - 1, i.e 1sec
      */
     const moveTop = this.moveTop.interpolate({
-      inputRange: [0, 0.75, 1],
-      outputRange: [walletYPos, walletYPos, -30]
+      inputRange: [0, 0.70, 1],
+      outputRange: [walletYPos, walletYPos, -100]
     });
 
     /**
@@ -291,8 +291,8 @@ class BonusRelease extends React.PureComponent<Props, State> {
      *  move to 10 from 0.75 - 1, i.e 1sec
      */
     const moveRight = this.moveRight.interpolate({
-      inputRange: [0, 0.75, 1],
-      outputRange: [walletXPos, walletXPos, 10]
+      inputRange: [0, 0.70, 1],
+      outputRange: [walletXPos, walletXPos, -100]
     });
 
     /**
@@ -303,7 +303,7 @@ class BonusRelease extends React.PureComponent<Props, State> {
      */
     const walletOpacity = this.walletOpacity.interpolate({
       inputRange: [0, 0.05, 0.75, 1],
-      outputRange: [0, 1, 1, 0]
+      outputRange: [0, 1, 1, 1]
     });
 
     /**
@@ -314,7 +314,7 @@ class BonusRelease extends React.PureComponent<Props, State> {
      */
     const walletScale = this.walletScale.interpolate({
       inputRange: [0, 0.05, 0.1, 0.75, 1],
-      outputRange: [5, 0.7, 1, 1, 0.5]
+      outputRange: [5, 0.7, 1, 1, 0.3]
     });
 
     return (

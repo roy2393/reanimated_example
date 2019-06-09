@@ -155,7 +155,7 @@ export default class BonusRe extends Component {
 
     this._rotate = interpolate(this.rayanimation, {
       inputRange: [0, 0.2, 0.8, 1],
-      outputRange: [0, 3.14, 3.14, 0]
+      outputRange: [4.7, 3.14, 3.14, 4.7]
     });
 
     this._rayOpacity = interpolate(this.rayanimation, {
