@@ -4,6 +4,7 @@ import { StyleSheet, View, Dimensions, Image, Text } from "react-native";
 import { Events } from "../../handlers/eventemitter";
 
 import Animated, { Easing } from "react-native-reanimated";
+import styles from './Bonus.style';
 
 const HEIGHT = Dimensions.get("window").height;
 const WIDTH = Dimensions.get("window").width;
@@ -21,7 +22,7 @@ const {
   Clock,
   call,
   debug,
-  stopClock,
+  stopClock
 } = Animated;
 
 function runTiming(clock, value, dest, duration, callback) {
@@ -44,8 +45,6 @@ function runTiming(clock, value, dest, duration, callback) {
     set(state.time, 0),
     set(state.frameTime, 0)
   ];
-
-
 
   return block([
     cond(and(state.finished, eq(state.position, value)), [
@@ -127,7 +126,7 @@ export default class BonusRe extends Component {
       console.log("next event started", this.eventQueue);
       this.animate(this.eventQueue[0]);
     }
-  }
+  };
 
   animate(data) {
     // const transX = new Value(0);
@@ -142,7 +141,7 @@ export default class BonusRe extends Component {
       5000,
       this.onAnimationComplete
     );
-    console.log('ANIMATE::', this.rayanimation, this.walletanimation);
+    console.log("ANIMATE::", this.rayanimation, this.walletanimation);
     this.updateBonusText(data.bonusReleased);
   }
 
@@ -187,31 +186,18 @@ export default class BonusRe extends Component {
         <Animated.Image
           source={require("./rays.png")}
           style={[
+            styles.rayImg,
             {
-              position: "absolute",
-              width: 220,
-              height: 220,
               opacity: this._rayOpacity,
-              justifyContent: "center",
-              alignItems: "center"
-            },
-            {
               transform: [{ rotate: this._rotate }, { scale: this._scale }]
             }
           ]}
         />
         <Animated.View
           style={[
+            styles.walletCont,
             {
-              position: "absolute",
-              width: 100,
-              height: 100,
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-              opacity: this._walletOpacity
-            },
-            {
+              opacity: this._walletOpacity,
               transform: [
                 {
                   translateX: this._transX,
@@ -223,35 +209,11 @@ export default class BonusRe extends Component {
           ]}
         >
           <Image source={require("./wallet.png")} style={styles.box} />
-          <View
-            style={{
-              position: "absolute",
-              top: 50,
-              width: 70,
-              justifyContent: "center",
-              alignItems: "center"
-            }}
-          >
-            <Text
-              style={{
-                color: "#fff",
-                fontWeight: "bold",
-                fontSize: 15
-              }}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
+          <View style={styles.bonusAmountCont}>
+            <Text style={styles.text} numberOfLines={1} ellipsizeMode="tail">
               {`₹ ${this.state.bonusReleased}`}
             </Text>
-            <Text
-              style={{
-                color: "#fff",
-                fontWeight: "bold",
-                fontSize: 13
-              }}
-            >
-              {`BONUS`}
-            </Text>
+            <Text style={styles.text}>{`BONUS`}</Text>
           </View>
         </Animated.View>
       </React.Fragment>
@@ -259,19 +221,3 @@ export default class BonusRe extends Component {
   }
 }
 
-const BOX_SIZE = 100;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5FCFF"
-  },
-  box: {
-    width: BOX_SIZE,
-    height: BOX_SIZE,
-    alignSelf: "center",
-    margin: BOX_SIZE / 2
-  }
-});

@@ -1,7 +1,16 @@
 import React, { Component } from "react";
-import { View, Text, Dimensions, Animated, Easing, Image } from "react-native";
+import {
+  View,
+  Text,
+  Dimensions,
+  Animated,
+  Easing,
+  Image,
+  StyleSheet
+} from "react-native";
 
 import { Events } from "../../handlers/eventemitter";
+import styles from "./Bonus.style";
 
 const HEIGHT = Dimensions.get("window").height;
 const WIDTH = Dimensions.get("window").width;
@@ -238,7 +247,6 @@ class BonusRelease extends React.PureComponent<Props, State> {
    * @memberof BonusRelease
    */
   render() {
-
     const walletXPos = WIDTH / 2 - 50;
     const walletYPos = (HEIGHT - 100) / 2 - 50;
 
@@ -281,8 +289,8 @@ class BonusRelease extends React.PureComponent<Props, State> {
      *  move to -30 from 0.75 - 1, i.e 1sec
      */
     const moveTop = this.moveTop.interpolate({
-      inputRange: [0, 0.70, 1],
-      outputRange: [walletYPos, walletYPos, -100]
+      inputRange: [0, 0.7, 1],
+      outputRange: [0, 0, -HEIGHT / 2]
     });
 
     /**
@@ -291,8 +299,8 @@ class BonusRelease extends React.PureComponent<Props, State> {
      *  move to 10 from 0.75 - 1, i.e 1sec
      */
     const moveRight = this.moveRight.interpolate({
-      inputRange: [0, 0.70, 1],
-      outputRange: [walletXPos, walletXPos, -100]
+      inputRange: [0, 0.7, 1],
+      outputRange: [0, 0, -WIDTH / 2]
     });
 
     /**
@@ -320,68 +328,36 @@ class BonusRelease extends React.PureComponent<Props, State> {
     return (
       <React.Fragment>
         <Animated.Image
-          style={{
-            position: "absolute",
-            width: 220,
-            height: 220,
-            top: walletYPos - 65,
-            right: walletXPos - 65,
-            opacity: rayOpacity,
-            justifyContent: "center",
-            alignItems: "center",
-            transform: [{ rotate: spin }, { scale: rayScale }]
-          }}
+          style={[
+            styles.rayImg,
+            {
+              opacity: rayOpacity,
+              transform: [{ rotate: spin }, { scale: rayScale }]
+            }
+          ]}
           source={require("./rays.png")}
         />
         <Animated.View
-          style={{
-            position: "absolute",
-            top: moveTop,
-            right: moveRight,
-            width: 100,
-            height: 100,
-            justifyContent: "center",
-            alignItems: "center",
-            opacity: walletOpacity,
-            transform: [{ scale: walletScale }]
-          }}
+          style={[
+            styles.walletCont,
+            {
+              right: moveRight,
+              top: moveTop,
+              opacity: walletOpacity,
+              transform: [{ scale: walletScale }]
+            }
+          ]}
         >
-          <Image
-            style={{
-              justifyContent: "center",
-              alignItems: "center"
-            }}
-            source={require("./wallet.png")}
-          />
-          <Text
-            style={{
-              position: "absolute",
-              color: "#fff",
-              fontWeight: "bold",
-              fontSize: 15,
-              top: 50,
-              width: 70
-            }}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {`₹ ${this.state.bonusReleased}`}
-          </Text>
-          <Text
-            style={{
-              position: "absolute",
-              color: "#fff",
-              fontWeight: "bold",
-              fontSize: 13,
-              top: 68
-            }}
-          >
-            {`BONUS`}
-          </Text>
+          <Image style={styles.box} source={require("./wallet.png")} />
+          <View style={styles.bonusAmountCont}>
+            <Text style={styles.text} numberOfLines={1} ellipsizeMode="tail">
+              {`₹ ${this.state.bonusReleased}`}
+            </Text>
+            <Text style={styles.text}>{`BONUS`}</Text>
+          </View>
         </Animated.View>
       </React.Fragment>
     );
-
   }
 }
 
