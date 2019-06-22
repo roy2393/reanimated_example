@@ -25,7 +25,7 @@ const {
   stopClock
 } = Animated;
 
-function runTiming(clock, value, dest, duration, callback) {
+function runTiming(clock:any, value:any, dest:any, duration:number, callback?:any) {
   const onComplete = callback || function() {};
   const state = {
     finished: new Value(0),
@@ -61,7 +61,14 @@ function runTiming(clock, value, dest, duration, callback) {
   ]);
 }
 
-export default class BonusRe extends Component {
+interface Props {
+
+};
+interface State {
+  bonusReleased?: number
+}
+
+export default class BonusRe extends Component<Props, State > {
   /**
    * Queue that maintains message buffer
    *
@@ -69,14 +76,15 @@ export default class BonusRe extends Component {
    * @type {*}
    * @memberof BonusRelease
    */
-  private eventQueue: [] = [];
+  eventQueue: [] = [];
 
-  constructor(props) {
+  rayanimation:any;
+  walletAnimation:any;
+  walletanimation: any;
+
+  constructor(props:Props) {
     super(props);
-
-    this.state = {
-      bonusReleased: null
-    };
+    this.state = {};
   }
 
   componentDidMount() {
@@ -90,15 +98,12 @@ export default class BonusRe extends Component {
    * @memberof BonusRelease
    */
   handleBonusRelease(wsMsg: any) {
-    console.log("handleBonusRelease::", wsMsg);
     if (wsMsg && wsMsg.type === "bonus") {
       if (this.eventQueue.length === 0) {
-        console.log("queue empty, event started");
         this.animate(wsMsg);
       }
 
       this.eventQueue.push(wsMsg);
-      console.log("wsMsg pushed", wsMsg);
     }
   }
 
@@ -120,15 +125,13 @@ export default class BonusRe extends Component {
    */
   onAnimationComplete = () => {
     this.eventQueue.shift();
-    console.log("animation complete", this.eventQueue);
 
     if (this.eventQueue.length > 0) {
-      console.log("next event started", this.eventQueue);
       this.animate(this.eventQueue[0]);
     }
   };
 
-  animate(data) {
+  animate(data:any) {
     // const transX = new Value(0);
     const clock1 = new Clock();
     const clock2 = new Clock();
@@ -141,43 +144,41 @@ export default class BonusRe extends Component {
       5000,
       this.onAnimationComplete
     );
-    console.log("ANIMATE::", this.rayanimation, this.walletanimation);
     this.updateBonusText(data.bonusReleased);
   }
 
   render() {
-    console.log("RE RENDER");
-    this._scale = interpolate(this.rayanimation, {
+    const scale = interpolate(this.rayanimation, {
       inputRange: [0, 0.2, 0.8, 1],
       outputRange: [0, 1, 1, 0]
     });
 
-    this._rotate = interpolate(this.rayanimation, {
+    const rotate = interpolate(this.rayanimation, {
       inputRange: [0, 0.2, 0.8, 1],
       outputRange: [4.7, 3.14, 3.14, 4.7]
     });
 
-    this._rayOpacity = interpolate(this.rayanimation, {
+    const rayOpacity = interpolate(this.rayanimation, {
       inputRange: [0, 0.2, 0.8, 1],
       outputRange: [0, 1, 1, 0]
     });
 
-    this._walletScale = interpolate(this.walletAnimation, {
+    const walletScale = interpolate(this.walletAnimation, {
       inputRange: [0.2, 0.25, 0.3, 0.8, 1],
       outputRange: [5, 0.5, 1, 1, 0.3]
     });
 
-    this._walletOpacity = interpolate(this.walletAnimation, {
+    const walletOpacity = interpolate(this.walletAnimation, {
       inputRange: [0.2, 0.25, 0.3, 1],
       outputRange: [0, 0.7, 1, 1]
     });
 
-    this._transX = interpolate(this.walletAnimation, {
+    const transX = interpolate(this.walletAnimation, {
       inputRange: [0, 0.8, 1],
       outputRange: [0, 0, WIDTH / 2]
     });
 
-    this._transY = interpolate(this.walletAnimation, {
+    const transY = interpolate(this.walletAnimation, {
       inputRange: [0, 0.8, 1],
       outputRange: [0, 0, -HEIGHT / 2]
     });
@@ -188,8 +189,8 @@ export default class BonusRe extends Component {
           style={[
             styles.rayImg,
             {
-              opacity: this._rayOpacity,
-              transform: [{ rotate: this._rotate }, { scale: this._scale }]
+              opacity: rayOpacity,
+              transform: [{ rotate: rotate }, { scale: scale }]
             }
           ]}
         />
@@ -197,12 +198,12 @@ export default class BonusRe extends Component {
           style={[
             styles.walletCont,
             {
-              opacity: this._walletOpacity,
+              opacity: walletOpacity,
               transform: [
                 {
-                  translateX: this._transX,
-                  translateY: this._transY,
-                  scale: this._walletScale
+                  translateX: transX,
+                  translateY: transY,
+                  scale: walletScale
                 }
               ]
             }
